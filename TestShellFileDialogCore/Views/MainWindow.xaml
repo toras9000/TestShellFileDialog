@@ -3,13 +3,606 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:prism="http://prismlibrary.com/"
+        xmlns:rxp="clr-namespace:Reactive.Bindings.Interactivity;assembly=ReactiveProperty.WPF"
+        xmlns:comet="http://schemas.cometflavor.toras9000/"
         xmlns:local="clr-namespace:TestShellFileDialogCore.Views"
+        xmlns:vm="clr-namespace:TestShellFileDialogCore.ViewModels"
         prism:ViewModelLocator.AutoWireViewModel="True"
         mc:Ignorable="d"
-        Title="MainWindow"
+        d:DataContext="{d:DesignInstance vm:OpenFileDialogViewModel}"
+        Title="TestShellFileDialog"
         Width="800" Height="450">
-    <Grid>
 
+    <!-- インタラクション -->
+    <i:Interaction.Triggers>
+        <!-- ウィンドウクローズ後イベント -->
+        <i:EventTrigger EventName="Closed">
+            <comet:ObjectDisposeAction Object="{Binding}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid>
+        <TabControl Margin="4">
+            <!-- ファイルオープンダイアログテスト用 -->
+            <TabItem Header="OpenFileDialog" DataContext="{Binding OpenFileDialogContext}">
+                <Grid>
+                    <!-- インタラクション -->
+                    <i:Interaction.Triggers>
+                        <!-- ダイアログ表示要求 -->
+                        <comet:ReactiveTrigger Source="{Binding ShowDialogRequest}">
+                            <comet:ShellOpenFileDialogAction />
+                        </comet:ReactiveTrigger>
+                    </i:Interaction.Triggers>
+
+                    <!-- グリッド定義 -->
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- ダイアログ表示ボタン -->
+                    <Button Grid.Row="0"
+                            HorizontalAlignment="Left"
+                            Margin="4,4,4,8" Padding="8,2,8,2"
+                            Content="Show OpenFileDialog"
+                            Command="{Binding ShowDialogCommand}" />
+
+                    <!-- ダイアログ表示用設定 -->
+                    <GroupBox Grid.Row="1" Header="動作設定">
+                        <!-- インタラクション -->
+                        <i:Interaction.Behaviors>
+                            <!-- View上の設定値エラーをバインド -->
+                            <comet:ViewValidationErrorBehavior  HasViewError="{Binding HasViewError.Value, Mode=OneWayToSource}" />
+                        </i:Interaction.Behaviors>
+                        <ScrollViewer>
+                            <StackPanel>
+                                <Expander Header="状態設定" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Padding" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="初期フォルダ" />
+                                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Directory.Value}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="初期入力ファイル名" />
+                                        <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding InitialFileName.Value}" />
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="デフォルト拡張子" />
+                                        <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding DefaultExtension.Value}" />
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="ファイルフィルタ"
+                                                   VerticalAlignment="Top" />
+                                        <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding Filters.Value}"
+                                                   Height="60"
+                                                   HorizontalScrollBarVisibility="Auto"
+                                                   VerticalScrollBarVisibility="Visible"
+                                                   AcceptsReturn="True" />
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="フィルタインデクス" />
+                                        <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding InitialFilterIndex.Value, NotifyOnValidationError=True}"
+                                                   Width="80" HorizontalAlignment="Left" />
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="デフォルトフォルダ" />
+                                        <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding DefaultDirectory.Value}" />
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="クライアントGUID" />
+                                        <TextBox   Grid.Row="6" Grid.Column="1" Text="{Binding ClientGuid.Value, NotifyOnValidationError=True}" />
+                                    </Grid>
+                                </Expander>
+                                <Expander Header="オプション" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type CheckBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type Separator}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Setter Property="Background" Value="LightGray" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <CheckBox  Grid.Row="0" Grid.Column="0" IsChecked="{Binding StrictFileTypes.Value}" Content="StrictFileTypes" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="設定されたファイルタイプのファイルのみを選択可能とする" />
+                                        <Separator Grid.Row="0" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="1" Grid.Column="0" IsChecked="{Binding NoChangeDirectory.Value}" Content="NoChangeDirectory" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="カレントディレクトリを変更しない" />
+                                        <Separator Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="2" Grid.Column="0" IsChecked="{Binding PickFolders.Value}" Content="PickFolders" />
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="フォルダを選択する" />
+                                        <Separator Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="3" Grid.Column="0" IsChecked="{Binding ForceFileSystem.Value}" Content="ForceFileSystem" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="ファイルシステムアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="4" Grid.Column="0" IsChecked="{Binding AllNonStorageItems.Value}" Content="AllNonStorageItems" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="シェルネームスペース内のすべてのアイテムを選択可能とする" />
+                                        <Separator Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="5" Grid.Column="0" IsChecked="{Binding NoValidate.Value}" Content="NoValidate" />
+                                        <TextBlock Grid.Row="5" Grid.Column="1" Text="ファイルを開けない状態(共有不可やアクセス拒否等)を検証しない" />
+                                        <Separator Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="6" Grid.Column="0" IsChecked="{Binding AllowMultiSelect.Value}" Content="AllowMultiSelect" />
+                                        <TextBlock Grid.Row="6" Grid.Column="1" Text="複数選択を許可する" />
+                                        <Separator Grid.Row="6" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="7" Grid.Column="0" IsChecked="{Binding PathMustExist.Value}" Content="PathMustExist" />
+                                        <TextBlock Grid.Row="7" Grid.Column="1" Text="存在するフォルダのアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="7" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="8" Grid.Column="0" IsChecked="{Binding FileMustExist.Value}" Content="FileMustExist" />
+                                        <TextBlock Grid.Row="8" Grid.Column="1" Text="存在するアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="8" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="9" Grid.Column="0" IsChecked="{Binding CreatePrompt.Value}" Content="CreatePrompt" />
+                                        <TextBlock Grid.Row="9" Grid.Column="1" Text="ファイルの作成確認を表示する" />
+                                        <Separator Grid.Row="9" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="10" Grid.Column="0" IsChecked="{Binding ShareAware.Value}" Content="ShareAware" />
+                                        <TextBlock Grid.Row="10" Grid.Column="1" Text="共有違反(アプリケーションが開いている場合)のガイダンスを表示する" />
+                                        <Separator Grid.Row="10" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="11" Grid.Column="0" IsChecked="{Binding NoReadOnlyReturn.Value}" Content="NoReadOnlyReturn" />
+                                        <TextBlock Grid.Row="11" Grid.Column="1" Text="読み取り専用アイテムを選択不可とする" />
+                                        <Separator Grid.Row="11" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="12" Grid.Column="0" IsChecked="{Binding NoTestFileCreate.Value}" Content="NoTestFileCreate" />
+                                        <TextBlock Grid.Row="12" Grid.Column="1" Text="ファイルが作成可能であるかをテストしない" />
+                                        <Separator Grid.Row="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="13" Grid.Column="0" IsChecked="{Binding HidePinnedPlaces.Value}" Content="HidePinnedPlaces" />
+                                        <TextBlock Grid.Row="13" Grid.Column="1" Text="ナビゲーションペインのデフォルトアイテムを非表示とする" />
+                                        <Separator Grid.Row="13" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="14" Grid.Column="0" IsChecked="{Binding NoDereferenceLinks.Value}" Content="NoDereferenceLinks" />
+                                        <TextBlock Grid.Row="14" Grid.Column="1" Text="ショートカットの参照先解決をしない。(ショートカットファイル自体を選択可能とする)" />
+                                        <Separator Grid.Row="14" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="15" Grid.Column="0" IsChecked="{Binding OkButtonNeedsInteraction.Value}" Content="OkButtonNeedsInteraction" />
+                                        <TextBlock Grid.Row="15" Grid.Column="1" Text="確定ボタン操作のためにユーザ操作を必要とする" />
+                                        <Separator Grid.Row="15" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="16" Grid.Column="0" IsChecked="{Binding DontAddToRecent.Value}" Content="DontAddToRecent" />
+                                        <TextBlock Grid.Row="16" Grid.Column="1" Text="選択アイテムを最近使用したファイルのリストに追加しない" />
+                                        <Separator Grid.Row="16" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="17" Grid.Column="0" IsChecked="{Binding ForceShowHidden.Value}" Content="ForceShowHidden" />
+                                        <TextBlock Grid.Row="17" Grid.Column="1" Text="非表示属性のアイテムを表示する" />
+                                        <Separator Grid.Row="17" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="18" Grid.Column="0" IsChecked="{Binding ForcePreviewPaneOn.Value}" Content="ForcePreviewPaneOn" />
+                                        <TextBlock Grid.Row="18" Grid.Column="1" Text="プレビューペインを常に表示する" />
+                                        <Separator Grid.Row="18" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+                                    </Grid>
+                                </Expander>
+                                <Expander Header="カスタマイズ" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Padding" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="タイトル" />
+                                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Title.Value}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="確定ボタン名" />
+                                        <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding AcceptButtonLabel.Value}" />
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="ファイル欄ラベル" />
+                                        <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding FileNameLabel.Value}" />
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="追加の選択場所"
+                                                   VerticalAlignment="Top" />
+                                        <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding AdditionalPlaces.Value}"
+                                                   Height="60"
+                                                   HorizontalScrollBarVisibility="Auto"
+                                                   VerticalScrollBarVisibility="Visible"
+                                                   AcceptsReturn="True"/>
+                                    </Grid>
+                                </Expander>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </GroupBox>
+
+                    <!-- ダイアログ結果 -->
+                    <GroupBox Grid.Row="2" Header="結果">
+                        <Grid Margin="0,0,0,0">
+                            <Grid.Resources>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Padding" Value="0,2,8,3" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                                <Style TargetType="{x:Type TextBox}">
+                                    <Setter Property="Margin" Value="0,2,8,3" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                </Style>
+                            </Grid.Resources>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="フィルタインデクス" />
+                            <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding ResultFilterIndex.Value, Mode=OneWay}"
+                                       Width="80" HorizontalAlignment="Left"
+                                       IsReadOnly="True" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="選択項目" VerticalAlignment="Top" />
+                            <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding ResultItems.Value, Mode=OneWay}"
+                                       Height="60"
+                                       HorizontalScrollBarVisibility="Auto"
+                                       VerticalScrollBarVisibility="Visible"
+                                       IsReadOnly="True" />
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <!-- ファイル保存ダイアログテスト用 -->
+            <TabItem Header="SaveFileDialog" DataContext="{Binding SaveFileDialogContext}">
+                <Grid>
+                    <!-- インタラクション -->
+                    <i:Interaction.Triggers>
+                        <!-- ダイアログ表示要求 -->
+                        <comet:ReactiveTrigger Source="{Binding ShowDialogRequest}">
+                            <comet:ShellSaveFileDialogAction />
+                        </comet:ReactiveTrigger>
+                    </i:Interaction.Triggers>
+
+                    <!-- グリッド定義 -->
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- ダイアログ表示ボタン -->
+                    <Button Grid.Row="0"
+                            HorizontalAlignment="Left"
+                            Margin="4,4,4,8" Padding="8,2,8,2"
+                            Content="Show SaveFileDialog"
+                            Command="{Binding ShowDialogCommand}" />
+
+                    <!-- ダイアログ表示用設定 -->
+                    <GroupBox Grid.Row="1" Header="動作設定">
+                        <!-- インタラクション -->
+                        <i:Interaction.Behaviors>
+                            <!-- View上の設定値エラーをバインド -->
+                            <comet:ViewValidationErrorBehavior  HasViewError="{Binding HasViewError.Value, Mode=OneWayToSource}" />
+                        </i:Interaction.Behaviors>
+                        <ScrollViewer>
+                            <StackPanel>
+                                <Expander Header="状態設定" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Padding" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="初期フォルダ" />
+                                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Directory.Value}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="初期入力ファイル名" />
+                                        <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding InitialFileName.Value}" />
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="デフォルト拡張子" />
+                                        <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding DefaultExtension.Value}" />
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="ファイルフィルタ"
+                                                   VerticalAlignment="Top" />
+                                        <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding Filters.Value}"
+                                                   Height="60"
+                                                   HorizontalScrollBarVisibility="Auto"
+                                                   VerticalScrollBarVisibility="Visible"
+                                                   AcceptsReturn="True" />
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="フィルタインデクス" />
+                                        <TextBox   Grid.Row="4" Grid.Column="1" Text="{Binding InitialFilterIndex.Value, NotifyOnValidationError=True}"
+                                                   Width="80" HorizontalAlignment="Left" />
+
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Text="デフォルトフォルダ" />
+                                        <TextBox   Grid.Row="5" Grid.Column="1" Text="{Binding DefaultDirectory.Value}" />
+
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Text="クライアントGUID" />
+                                        <TextBox   Grid.Row="6" Grid.Column="1" Text="{Binding ClientGuid.Value, NotifyOnValidationError=True}" />
+                                    </Grid>
+                                </Expander>
+                                <Expander Header="オプション" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type CheckBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type Separator}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Setter Property="Background" Value="LightGray" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <CheckBox  Grid.Row="0" Grid.Column="0" IsChecked="{Binding OverwritePrompt.Value}" Content="OverwritePrompt" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="上書きの確認を表示する" />
+                                        <Separator Grid.Row="0" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="1" Grid.Column="0" IsChecked="{Binding StrictFileTypes.Value}" Content="StrictFileTypes" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Text="設定されたファイルタイプのファイルのみを選択可能とする" />
+                                        <Separator Grid.Row="1" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="2" Grid.Column="0" IsChecked="{Binding NoChangeDirectory.Value}" Content="NoChangeDirectory" />
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Text="カレントディレクトリを変更しない" />
+                                        <Separator Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="3" Grid.Column="0" IsChecked="{Binding ForceFileSystem.Value}" Content="ForceFileSystem" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Text="ファイルシステムアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="4" Grid.Column="0" IsChecked="{Binding AllNonStorageItems.Value}" Content="AllNonStorageItems" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" Text="シェルネームスペース内のすべてのアイテムを選択可能とする" />
+                                        <Separator Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="5" Grid.Column="0" IsChecked="{Binding NoValidate.Value}" Content="NoValidate" />
+                                        <TextBlock Grid.Row="5" Grid.Column="1" Text="ファイルを開けない状態(共有不可やアクセス拒否等)を検証しない" />
+                                        <Separator Grid.Row="5" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="6" Grid.Column="0" IsChecked="{Binding PathMustExist.Value}" Content="PathMustExist" />
+                                        <TextBlock Grid.Row="6" Grid.Column="1" Text="存在するフォルダのアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="6" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="7" Grid.Column="0" IsChecked="{Binding FileMustExist.Value}" Content="FileMustExist" />
+                                        <TextBlock Grid.Row="7" Grid.Column="1" Text="存在するアイテムのみを選択可能とする" />
+                                        <Separator Grid.Row="7" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="8" Grid.Column="0" IsChecked="{Binding CreatePrompt.Value}" Content="CreatePrompt" />
+                                        <TextBlock Grid.Row="8" Grid.Column="1" Text="ファイルの作成確認を表示する" />
+                                        <Separator Grid.Row="8" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="9" Grid.Column="0" IsChecked="{Binding ShareAware.Value}" Content="ShareAware" />
+                                        <TextBlock Grid.Row="9" Grid.Column="1" Text="共有違反(アプリケーションが開いている場合)のガイダンスを表示する" />
+                                        <Separator Grid.Row="9" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="10" Grid.Column="0" IsChecked="{Binding NoReadOnlyReturn.Value}" Content="NoReadOnlyReturn" />
+                                        <TextBlock Grid.Row="10" Grid.Column="1" Text="読み取り専用アイテムを選択不可とする" />
+                                        <Separator Grid.Row="10" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="11" Grid.Column="0" IsChecked="{Binding NoTestFileCreate.Value}" Content="NoTestFileCreate" />
+                                        <TextBlock Grid.Row="11" Grid.Column="1" Text="ファイルが作成可能であるかをテストしない" />
+                                        <Separator Grid.Row="11" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="12" Grid.Column="0" IsChecked="{Binding HidePinnedPlaces.Value}" Content="HidePinnedPlaces" />
+                                        <TextBlock Grid.Row="12" Grid.Column="1" Text="ナビゲーションペインのデフォルトアイテムを非表示とする" />
+                                        <Separator Grid.Row="12" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="13" Grid.Column="0" IsChecked="{Binding NoDereferenceLinks.Value}" Content="NoDereferenceLinks" />
+                                        <TextBlock Grid.Row="13" Grid.Column="1" Text="ショートカットの参照先解決をしない。(ショートカットファイル自体を選択可能とする)" />
+                                        <Separator Grid.Row="13" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="14" Grid.Column="0" IsChecked="{Binding OkButtonNeedsInteraction.Value}" Content="OkButtonNeedsInteraction" />
+                                        <TextBlock Grid.Row="14" Grid.Column="1" Text="確定ボタン操作のためにユーザ操作を必要とする" />
+                                        <Separator Grid.Row="14" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="15" Grid.Column="0" IsChecked="{Binding DontAddToRecent.Value}" Content="DontAddToRecent" />
+                                        <TextBlock Grid.Row="15" Grid.Column="1" Text="選択アイテムを最近使用したファイルのリストに追加しない" />
+                                        <Separator Grid.Row="15" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+
+                                        <CheckBox  Grid.Row="16" Grid.Column="0" IsChecked="{Binding ForceShowHidden.Value}" Content="ForceShowHidden" />
+                                        <TextBlock Grid.Row="16" Grid.Column="1" Text="非表示属性のアイテムを表示する" />
+                                        <Separator Grid.Row="16" Grid.ColumnSpan="2" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+                                    </Grid>
+                                </Expander>
+                                <Expander Header="カスタマイズ" IsExpanded="True">
+                                    <Grid Margin="20,0,0,0">
+                                        <Grid.Resources>
+                                            <Style TargetType="{x:Type TextBlock}">
+                                                <Setter Property="Padding" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                            </Style>
+                                            <Style TargetType="{x:Type TextBox}">
+                                                <Setter Property="Margin" Value="0,2,8,3" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                            </Style>
+                                        </Grid.Resources>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="タイトル" />
+                                        <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding Title.Value}" />
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="確定ボタン名" />
+                                        <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding AcceptButtonLabel.Value}" />
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="ファイル欄ラベル" />
+                                        <TextBox   Grid.Row="2" Grid.Column="1" Text="{Binding FileNameLabel.Value}" />
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="追加の選択場所"
+                                                   VerticalAlignment="Top" />
+                                        <TextBox   Grid.Row="3" Grid.Column="1" Text="{Binding AdditionalPlaces.Value}"
+                                                   Height="60"
+                                                   HorizontalScrollBarVisibility="Auto"
+                                                   VerticalScrollBarVisibility="Visible"
+                                                   AcceptsReturn="True"/>
+                                    </Grid>
+                                </Expander>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </GroupBox>
+
+                    <!-- ダイアログ結果 -->
+                    <GroupBox Grid.Row="2" Header="結果">
+                        <Grid Margin="0,0,0,0">
+                            <Grid.Resources>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Setter Property="Padding" Value="0,2,8,3" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                                <Style TargetType="{x:Type TextBox}">
+                                    <Setter Property="Margin" Value="0,2,8,3" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
+                                </Style>
+                            </Grid.Resources>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="フィルタインデクス" />
+                            <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding ResultFilterIndex.Value, Mode=OneWay}"
+                                       Width="80" HorizontalAlignment="Left"
+                                       IsReadOnly="True" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="選択項目" VerticalAlignment="Top" />
+                            <TextBox   Grid.Row="1" Grid.Column="1" Text="{Binding ResultItems.Value, Mode=OneWay}"
+                                       Height="60"
+                                       HorizontalScrollBarVisibility="Auto"
+                                       VerticalScrollBarVisibility="Visible"
+                                       IsReadOnly="True" />
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
