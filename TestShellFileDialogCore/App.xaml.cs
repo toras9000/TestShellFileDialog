@@ -1,35 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using Prism.Ioc;
 using TestShellFileDialogCore.Views;
 
-namespace TestShellFileDialogCore
+namespace TestShellFileDialogCore;
+
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
+public partial class App
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// 型の登録処理
     /// </summary>
-    public partial class App
+    /// <param name="containerRegistry">型登録</param>
+    protected override void RegisterTypes(IContainerRegistry containerRegistry)
     {
-        /// <summary>
-        /// 型の登録処理
-        /// </summary>
-        /// <param name="containerRegistry">型登録</param>
-        protected override void RegisterTypes(IContainerRegistry containerRegistry)
-        {
-        }
+    }
 
-        /// <summary>
-        /// アプリケーションシェルの作成
-        /// </summary>
-        /// <returns></returns>
-        protected override Window CreateShell()
-        {
-            return this.Container.Resolve<MainWindow>();
-        }
+    /// <summary>
+    /// アプリケーションシェルの作成
+    /// </summary>
+    /// <returns></returns>
+    protected override Window CreateShell()
+    {
+        return this.Container.Resolve<MainWindow>();
     }
 }
