@@ -1,4 +1,5 @@
-﻿using System.Reactive.Linq;
+﻿
+using R3;
 
 namespace TestShellFileDialogCore.ViewModels;
 
@@ -15,7 +16,7 @@ public class ReactiveInteraction<T>
     /// </summary>
     public ReactiveInteraction()
     {
-        this.Source = Observable.FromEvent<T>(h => this.pulse += h, h => this.pulse -= h);
+        this.Source = Observable.FromEvent<T>(h => this.pulse += h, h => this.pulse -= h).AsSystemObservable();
     }
     #endregion
 
@@ -56,7 +57,7 @@ public class ReactiveInteraction
     /// </summary>
     public ReactiveInteraction()
     {
-        this.Source = Observable.FromEvent<object>(h => this.pulse += h, h => this.pulse -= h);
+        this.Source = Observable.FromEvent<object>(h => this.pulse += h, h => this.pulse -= h).AsSystemObservable();
     }
     #endregion
 

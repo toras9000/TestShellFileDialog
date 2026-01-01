@@ -1,8 +1,6 @@
-﻿using System.Reactive.Linq;
-using CometFlavor.Wpf.Win32.Dialogs;
+﻿using CometFlavor.Win32.Dialogs;
 using CometFlavor.Wpf.Win32.Interactions;
-using Reactive.Bindings;
-using Reactive.Bindings.Extensions;
+using R3;
 
 namespace TestShellFileDialogCore.ViewModels;
 
@@ -50,7 +48,7 @@ public class OpenFileDialogViewModel : AppViewModelBase
         this.ShowDialogRequest = showInteraction.Source;
 
         // ビューのエラー状態
-        this.HasViewError = new ReactivePropertySlim<bool>()
+        this.HasViewError = new BindableReactiveProperty<bool>()
             .AddTo(this.Disposables);
 
         // ダイアログ結果設定用デリゲート
@@ -58,29 +56,29 @@ public class OpenFileDialogViewModel : AppViewModelBase
         var dlgResultItems = default(Action<string>);
 
         // ダイアログ表示コマンド
-        this.ShowDialogCommand = new[]
-            {
-                this.HasViewError.Inverse(),
-            }
-            .CombineLatestValuesAreAllTrue()
+        this.ShowDialogCommand = Observable.CombineLatest([
+                this.HasViewError.Select(e => !e),
+            ])
+            .Select(values => values.All(v => v))
             .ToReactiveCommand()
-            .WithSubscribe(() => showOpenDialog(showInteraction, dlgResultFilter, dlgResultItems))
             .AddTo(this.Disposables);
+        this.ShowDialogCommand
+            .Subscribe(_ => showOpenDialog(showInteraction, dlgResultFilter, dlgResultItems));
 
         // デフォルト設定参照用
         var defParam = new ShellOpenFileDialogParameter();
 
         #region 動作設定：状態設定
-        this.Directory = new ReactivePropertySlim<string?>(defParam.Directory)
+        this.Directory = new BindableReactiveProperty<string?>(defParam.Directory)
             .AddTo(this.Disposables);
 
-        this.InitialFileName = new ReactivePropertySlim<string?>(defParam.InitialFileName)
+        this.InitialFileName = new BindableReactiveProperty<string?>(defParam.InitialFileName)
             .AddTo(this.Disposables);
 
-        this.DefaultExtension = new ReactivePropertySlim<string?>(defParam.DefaultExtension)
+        this.DefaultExtension = new BindableReactiveProperty<string?>(defParam.DefaultExtension)
             .AddTo(this.Disposables);
 
-        this.Filters = new ReactivePropertySlim<string>(string.Join("\n", new[]
+        this.Filters = new BindableReactiveProperty<string>(string.Join("\n", new[]
             {
                 "画像ファイル|*.png;*.jpg;*.gif;*.bmp",
                 "テキストファイル|*.txt;*.text;",
@@ -88,86 +86,86 @@ public class OpenFileDialogViewModel : AppViewModelBase
             }))
             .AddTo(this.Disposables);
 
-        this.InitialFilterIndex = new ReactivePropertySlim<uint>(defParam.InitialFilterIndex)
+        this.InitialFilterIndex = new BindableReactiveProperty<uint>(defParam.InitialFilterIndex)
             .AddTo(this.Disposables);
 
-        this.DefaultDirectory = new ReactivePropertySlim<string?>(defParam.DefaultDirectory)
+        this.DefaultDirectory = new BindableReactiveProperty<string?>(defParam.DefaultDirectory)
             .AddTo(this.Disposables);
 
-        this.ClientGuid = new ReactivePropertySlim<Guid>(defParam.ClientGuid)
+        this.ClientGuid = new BindableReactiveProperty<Guid>(defParam.ClientGuid)
             .AddTo(this.Disposables);
         #endregion
 
         #region 動作設定：オプション
-        this.StrictFileTypes = new ReactivePropertySlim<bool>(defParam.StrictFileTypes)
+        this.StrictFileTypes = new BindableReactiveProperty<bool>(defParam.StrictFileTypes)
             .AddTo(this.Disposables);
 
-        this.NoChangeDirectory = new ReactivePropertySlim<bool>(defParam.NoChangeDirectory)
+        this.NoChangeDirectory = new BindableReactiveProperty<bool>(defParam.NoChangeDirectory)
             .AddTo(this.Disposables);
 
-        this.PickFolders = new ReactivePropertySlim<bool>(defParam.PickFolders)
+        this.PickFolders = new BindableReactiveProperty<bool>(defParam.PickFolders)
             .AddTo(this.Disposables);
 
-        this.ForceFileSystem = new ReactivePropertySlim<bool>(defParam.ForceFileSystem)
+        this.ForceFileSystem = new BindableReactiveProperty<bool>(defParam.ForceFileSystem)
             .AddTo(this.Disposables);
 
-        this.AllNonStorageItems = new ReactivePropertySlim<bool>(defParam.AllNonStorageItems)
+        this.AllNonStorageItems = new BindableReactiveProperty<bool>(defParam.AllNonStorageItems)
             .AddTo(this.Disposables);
 
-        this.NoValidate = new ReactivePropertySlim<bool>(defParam.NoValidate)
+        this.NoValidate = new BindableReactiveProperty<bool>(defParam.NoValidate)
             .AddTo(this.Disposables);
 
-        this.AllowMultiSelect = new ReactivePropertySlim<bool>(defParam.AllowMultiSelect)
+        this.AllowMultiSelect = new BindableReactiveProperty<bool>(defParam.AllowMultiSelect)
             .AddTo(this.Disposables);
 
-        this.PathMustExist = new ReactivePropertySlim<bool>(defParam.PathMustExist)
+        this.PathMustExist = new BindableReactiveProperty<bool>(defParam.PathMustExist)
             .AddTo(this.Disposables);
 
-        this.FileMustExist = new ReactivePropertySlim<bool>(defParam.FileMustExist)
+        this.FileMustExist = new BindableReactiveProperty<bool>(defParam.FileMustExist)
             .AddTo(this.Disposables);
 
-        this.CreatePrompt = new ReactivePropertySlim<bool>(defParam.CreatePrompt)
+        this.CreatePrompt = new BindableReactiveProperty<bool>(defParam.CreatePrompt)
             .AddTo(this.Disposables);
 
-        this.ShareAware = new ReactivePropertySlim<bool>(defParam.ShareAware)
+        this.ShareAware = new BindableReactiveProperty<bool>(defParam.ShareAware)
             .AddTo(this.Disposables);
 
-        this.NoReadOnlyReturn = new ReactivePropertySlim<bool>(defParam.NoReadOnlyReturn)
+        this.NoReadOnlyReturn = new BindableReactiveProperty<bool>(defParam.NoReadOnlyReturn)
             .AddTo(this.Disposables);
 
-        this.NoTestFileCreate = new ReactivePropertySlim<bool>(defParam.NoTestFileCreate)
+        this.NoTestFileCreate = new BindableReactiveProperty<bool>(defParam.NoTestFileCreate)
             .AddTo(this.Disposables);
 
-        this.HidePinnedPlaces = new ReactivePropertySlim<bool>(defParam.HidePinnedPlaces)
+        this.HidePinnedPlaces = new BindableReactiveProperty<bool>(defParam.HidePinnedPlaces)
             .AddTo(this.Disposables);
 
-        this.NoDereferenceLinks = new ReactivePropertySlim<bool>(defParam.NoDereferenceLinks)
+        this.NoDereferenceLinks = new BindableReactiveProperty<bool>(defParam.NoDereferenceLinks)
             .AddTo(this.Disposables);
 
-        this.OkButtonNeedsInteraction = new ReactivePropertySlim<bool>(defParam.OkButtonNeedsInteraction)
+        this.OkButtonNeedsInteraction = new BindableReactiveProperty<bool>(defParam.OkButtonNeedsInteraction)
             .AddTo(this.Disposables);
 
-        this.DontAddToRecent = new ReactivePropertySlim<bool>(defParam.DontAddToRecent)
+        this.DontAddToRecent = new BindableReactiveProperty<bool>(defParam.DontAddToRecent)
             .AddTo(this.Disposables);
 
-        this.ForceShowHidden = new ReactivePropertySlim<bool>(defParam.ForceShowHidden)
+        this.ForceShowHidden = new BindableReactiveProperty<bool>(defParam.ForceShowHidden)
             .AddTo(this.Disposables);
 
-        this.ForcePreviewPaneOn = new ReactivePropertySlim<bool>(defParam.ForcePreviewPaneOn)
+        this.ForcePreviewPaneOn = new BindableReactiveProperty<bool>(defParam.ForcePreviewPaneOn)
             .AddTo(this.Disposables);
         #endregion
 
         #region 動作設定：ダイアログカスタマイズ
-        this.Title = new ReactivePropertySlim<string?>(defParam.Title)
+        this.Title = new BindableReactiveProperty<string?>(defParam.Title)
             .AddTo(this.Disposables);
 
-        this.AcceptButtonLabel = new ReactivePropertySlim<string?>(defParam.AcceptButtonLabel)
+        this.AcceptButtonLabel = new BindableReactiveProperty<string?>(defParam.AcceptButtonLabel)
             .AddTo(this.Disposables);
 
-        this.FileNameLabel = new ReactivePropertySlim<string?>(defParam.FileNameLabel)
+        this.FileNameLabel = new BindableReactiveProperty<string?>(defParam.FileNameLabel)
             .AddTo(this.Disposables);
 
-        this.AdditionalPlaces = new ReactivePropertySlim<string?>(string.Join("\n", new[]
+        this.AdditionalPlaces = new BindableReactiveProperty<string?>(string.Join("\n", new[]
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
@@ -177,11 +175,11 @@ public class OpenFileDialogViewModel : AppViewModelBase
 
         #region ダイアログ結果
         this.ResultFilterIndex = Observable.FromEvent<uint?>(h => dlgResultFilter += h, h => dlgResultFilter -= h)
-            .ToReadOnlyReactivePropertySlim()
+            .ToReadOnlyBindableReactiveProperty()
             .AddTo(this.Disposables);
 
         this.ResultItems = Observable.FromEvent<string?>(h => dlgResultItems += h, h => dlgResultItems -= h)
-            .ToReadOnlyReactivePropertySlim()
+            .ToReadOnlyBindableReactiveProperty()
             .AddTo(this.Disposables);
         #endregion
     }
@@ -190,7 +188,7 @@ public class OpenFileDialogViewModel : AppViewModelBase
     // 公開プロパティ
     #region インタラクション
     /// <summary>ビューのエラー状態バインド用</summary>
-    public ReactivePropertySlim<bool> HasViewError { get; }
+    public BindableReactiveProperty<bool> HasViewError { get; }
 
     /// <summary>ダイアログ表示要求トリガソース</summary>
     public IObservable<ShellOpenFileDialogActionParameter> ShowDialogRequest { get; }
@@ -201,106 +199,106 @@ public class OpenFileDialogViewModel : AppViewModelBase
 
     #region 動作設定：状態設定
     /// <summary>初期フォルダ</summary>
-    public ReactivePropertySlim<string?> Directory { get; }
+    public BindableReactiveProperty<string?> Directory { get; }
 
     /// <summary>初期入力ファイル名</summary>
-    public ReactivePropertySlim<string?> InitialFileName { get; }
+    public BindableReactiveProperty<string?> InitialFileName { get; }
 
     /// <summary>デフォルト拡張子</summary>
-    public ReactivePropertySlim<string?> DefaultExtension { get; }
+    public BindableReactiveProperty<string?> DefaultExtension { get; }
 
     /// <summary>選択できるファイルフィルタ</summary>
-    public ReactivePropertySlim<string> Filters { get; }
+    public BindableReactiveProperty<string> Filters { get; }
 
     /// <summary>ファイルフィルタの初期選択インデックス(1ベース値)</summary>
-    public ReactivePropertySlim<uint> InitialFilterIndex { get; }
+    public BindableReactiveProperty<uint> InitialFilterIndex { get; }
 
     /// <summary>最近使用したフォルダーが無い場合のデフォルトフォルダ</summary>
-    public ReactivePropertySlim<string?> DefaultDirectory { get; }
+    public BindableReactiveProperty<string?> DefaultDirectory { get; }
 
     /// <summary>ダイアログ状態(最終フォルダや位置/サイズ)の永続化のためのGUID</summary>
-    public ReactivePropertySlim<Guid> ClientGuid { get; }
+    public BindableReactiveProperty<Guid> ClientGuid { get; }
     #endregion
 
     #region 動作設定：オプション
     /// <summary>設定されたファイルタイプのファイルのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> StrictFileTypes { get; }
+    public BindableReactiveProperty<bool> StrictFileTypes { get; }
 
     /// <summary>カレントディレクトリを変更しない</summary>
-    public ReactivePropertySlim<bool> NoChangeDirectory { get; }
+    public BindableReactiveProperty<bool> NoChangeDirectory { get; }
 
     /// <summary>フォルダを選択する</summary>
-    public ReactivePropertySlim<bool> PickFolders { get; }
+    public BindableReactiveProperty<bool> PickFolders { get; }
 
     /// <summary>ファイルシステムアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> ForceFileSystem { get; }
+    public BindableReactiveProperty<bool> ForceFileSystem { get; }
 
     /// <summary>シェルネームスペース内のすべてのアイテムを選択可能とする</summary>
-    public ReactivePropertySlim<bool> AllNonStorageItems { get; }
+    public BindableReactiveProperty<bool> AllNonStorageItems { get; }
 
     /// <summary>ファイルを開けない状態(共有不可やアクセス拒否等)を検証しない</summary>
-    public ReactivePropertySlim<bool> NoValidate { get; }
+    public BindableReactiveProperty<bool> NoValidate { get; }
 
     /// <summary>複数選択を許可する</summary>
-    public ReactivePropertySlim<bool> AllowMultiSelect { get; }
+    public BindableReactiveProperty<bool> AllowMultiSelect { get; }
 
     /// <summary>存在するフォルダのアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> PathMustExist { get; }
+    public BindableReactiveProperty<bool> PathMustExist { get; }
 
     /// <summary>存在するアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> FileMustExist { get; }
+    public BindableReactiveProperty<bool> FileMustExist { get; }
 
     /// <summary>ファイルの作成確認を表示する</summary>
-    public ReactivePropertySlim<bool> CreatePrompt { get; }
+    public BindableReactiveProperty<bool> CreatePrompt { get; }
 
     /// <summary>共有違反(アプリケーションが開いている場合)のガイダンスを表示する</summary>
-    public ReactivePropertySlim<bool> ShareAware { get; }
+    public BindableReactiveProperty<bool> ShareAware { get; }
 
     /// <summary>読み取り専用アイテムを選択不可とする</summary>
-    public ReactivePropertySlim<bool> NoReadOnlyReturn { get; }
+    public BindableReactiveProperty<bool> NoReadOnlyReturn { get; }
 
     /// <summary>ファイルが作成可能であるかをテストしない</summary>
-    public ReactivePropertySlim<bool> NoTestFileCreate { get; }
+    public BindableReactiveProperty<bool> NoTestFileCreate { get; }
 
     /// <summary>ナビゲーションペインのデフォルトアイテムを非表示とする</summary>
-    public ReactivePropertySlim<bool> HidePinnedPlaces { get; }
+    public BindableReactiveProperty<bool> HidePinnedPlaces { get; }
 
     /// <summary>ショートカットの参照先解決をしない。(ショートカットファイル自体を選択可能とする)</summary>
-    public ReactivePropertySlim<bool> NoDereferenceLinks { get; }
+    public BindableReactiveProperty<bool> NoDereferenceLinks { get; }
 
     /// <summary>確定ボタン操作のためにユーザ操作を必要とする</summary>
-    public ReactivePropertySlim<bool> OkButtonNeedsInteraction { get; }
+    public BindableReactiveProperty<bool> OkButtonNeedsInteraction { get; }
 
     /// <summary>選択アイテムを最近使用したファイルのリストに追加しない</summary>
-    public ReactivePropertySlim<bool> DontAddToRecent { get; }
+    public BindableReactiveProperty<bool> DontAddToRecent { get; }
 
     /// <summary>非表示属性のアイテムを表示する</summary>
-    public ReactivePropertySlim<bool> ForceShowHidden { get; }
+    public BindableReactiveProperty<bool> ForceShowHidden { get; }
 
     /// <summary>プレビューペインを常に表示する</summary>
-    public ReactivePropertySlim<bool> ForcePreviewPaneOn { get; }
+    public BindableReactiveProperty<bool> ForcePreviewPaneOn { get; }
     #endregion
 
     #region 動作設定：ダイアログカスタマイズ
     /// <summary>ダイアログのタイトル</summary>
-    public ReactivePropertySlim<string?> Title { get; }
+    public BindableReactiveProperty<string?> Title { get; }
 
     /// <summary>確定ボタンのラベル</summary>
-    public ReactivePropertySlim<string?> AcceptButtonLabel { get; }
+    public BindableReactiveProperty<string?> AcceptButtonLabel { get; }
 
     /// <summary>ファイル名入力欄のラベル</summary>
-    public ReactivePropertySlim<string?> FileNameLabel { get; }
+    public BindableReactiveProperty<string?> FileNameLabel { get; }
 
     /// <summary>追加の選択場所</summary>
-    public ReactivePropertySlim<string?> AdditionalPlaces { get; }
+    public BindableReactiveProperty<string?> AdditionalPlaces { get; }
     #endregion
 
     #region ダイアログ結果
     /// <summary>選択時のフィルタインデックス</summary>
-    public ReadOnlyReactivePropertySlim<uint?> ResultFilterIndex { get; }
+    public IReadOnlyBindableReactiveProperty<uint?> ResultFilterIndex { get; }
 
     /// <summary>ダイアログの選択結果</summary>
-    public ReadOnlyReactivePropertySlim<string?> ResultItems { get; }
+    public IReadOnlyBindableReactiveProperty<string?> ResultItems { get; }
     #endregion
 
     /// <summary>ファイルオープンダイアログ表示</summary>
@@ -395,7 +393,7 @@ public class SaveFileDialogViewModel : AppViewModelBase
         this.ShowDialogRequest = showInteraction.Source;
 
         // ビューのエラー状態
-        this.HasViewError = new ReactivePropertySlim<bool>()
+        this.HasViewError = new BindableReactiveProperty<bool>()
             .AddTo(this.Disposables);
 
         // ダイアログ結果設定用デリゲート
@@ -403,29 +401,29 @@ public class SaveFileDialogViewModel : AppViewModelBase
         var dlgResultItem = default(Action<string>);
 
         // ダイアログ表示コマンド
-        this.ShowDialogCommand = new[]
-            {
-                this.HasViewError.Inverse(),
-            }
-            .CombineLatestValuesAreAllTrue()
+        this.ShowDialogCommand = Observable.CombineLatest([
+                this.HasViewError.Select(e => !e),
+            ])
+            .Select(values => values.All(v => v))
             .ToReactiveCommand()
-            .WithSubscribe(() => showSaveDialog(showInteraction, dlgResultFilter, dlgResultItem))
             .AddTo(this.Disposables);
+        this.ShowDialogCommand
+            .Subscribe(_ => showSaveDialog(showInteraction, dlgResultFilter, dlgResultItem));
 
         // デフォルト設定参照用
         var defParam = new ShellSaveFileDialogParameter();
 
         #region 動作設定：状態設定
-        this.Directory = new ReactivePropertySlim<string?>(defParam.Directory)
+        this.Directory = new BindableReactiveProperty<string?>(defParam.Directory)
             .AddTo(this.Disposables);
 
-        this.InitialFileName = new ReactivePropertySlim<string?>(defParam.InitialFileName)
+        this.InitialFileName = new BindableReactiveProperty<string?>(defParam.InitialFileName)
             .AddTo(this.Disposables);
 
-        this.DefaultExtension = new ReactivePropertySlim<string?>(defParam.DefaultExtension)
+        this.DefaultExtension = new BindableReactiveProperty<string?>(defParam.DefaultExtension)
             .AddTo(this.Disposables);
 
-        this.Filters = new ReactivePropertySlim<string?>(string.Join("\n", new[]
+        this.Filters = new BindableReactiveProperty<string?>(string.Join("\n", new[]
             {
                 "画像ファイル|*.png;*.jpg;*.gif;*.bmp",
                 "テキストファイル|*.txt;*.text;",
@@ -433,80 +431,80 @@ public class SaveFileDialogViewModel : AppViewModelBase
             }))
             .AddTo(this.Disposables);
 
-        this.InitialFilterIndex = new ReactivePropertySlim<uint>(defParam.InitialFilterIndex)
+        this.InitialFilterIndex = new BindableReactiveProperty<uint>(defParam.InitialFilterIndex)
             .AddTo(this.Disposables);
 
-        this.DefaultDirectory = new ReactivePropertySlim<string?>(defParam.DefaultDirectory)
+        this.DefaultDirectory = new BindableReactiveProperty<string?>(defParam.DefaultDirectory)
             .AddTo(this.Disposables);
 
-        this.ClientGuid = new ReactivePropertySlim<Guid>(defParam.ClientGuid)
+        this.ClientGuid = new BindableReactiveProperty<Guid>(defParam.ClientGuid)
             .AddTo(this.Disposables);
         #endregion
 
         #region 動作設定：オプション
-        this.OverwritePrompt = new ReactivePropertySlim<bool>(defParam.OverwritePrompt)
+        this.OverwritePrompt = new BindableReactiveProperty<bool>(defParam.OverwritePrompt)
             .AddTo(this.Disposables);
 
-        this.StrictFileTypes = new ReactivePropertySlim<bool>(defParam.StrictFileTypes)
+        this.StrictFileTypes = new BindableReactiveProperty<bool>(defParam.StrictFileTypes)
             .AddTo(this.Disposables);
 
-        this.NoChangeDirectory = new ReactivePropertySlim<bool>(defParam.NoChangeDirectory)
+        this.NoChangeDirectory = new BindableReactiveProperty<bool>(defParam.NoChangeDirectory)
             .AddTo(this.Disposables);
 
-        this.ForceFileSystem = new ReactivePropertySlim<bool>(defParam.ForceFileSystem)
+        this.ForceFileSystem = new BindableReactiveProperty<bool>(defParam.ForceFileSystem)
             .AddTo(this.Disposables);
 
-        this.AllNonStorageItems = new ReactivePropertySlim<bool>(defParam.AllNonStorageItems)
+        this.AllNonStorageItems = new BindableReactiveProperty<bool>(defParam.AllNonStorageItems)
             .AddTo(this.Disposables);
 
-        this.NoValidate = new ReactivePropertySlim<bool>(defParam.NoValidate)
+        this.NoValidate = new BindableReactiveProperty<bool>(defParam.NoValidate)
             .AddTo(this.Disposables);
 
-        this.PathMustExist = new ReactivePropertySlim<bool>(defParam.PathMustExist)
+        this.PathMustExist = new BindableReactiveProperty<bool>(defParam.PathMustExist)
             .AddTo(this.Disposables);
 
-        this.FileMustExist = new ReactivePropertySlim<bool>(defParam.FileMustExist)
+        this.FileMustExist = new BindableReactiveProperty<bool>(defParam.FileMustExist)
             .AddTo(this.Disposables);
 
-        this.CreatePrompt = new ReactivePropertySlim<bool>(defParam.CreatePrompt)
+        this.CreatePrompt = new BindableReactiveProperty<bool>(defParam.CreatePrompt)
             .AddTo(this.Disposables);
 
-        this.ShareAware = new ReactivePropertySlim<bool>(defParam.ShareAware)
+        this.ShareAware = new BindableReactiveProperty<bool>(defParam.ShareAware)
             .AddTo(this.Disposables);
 
-        this.NoReadOnlyReturn = new ReactivePropertySlim<bool>(defParam.NoReadOnlyReturn)
+        this.NoReadOnlyReturn = new BindableReactiveProperty<bool>(defParam.NoReadOnlyReturn)
             .AddTo(this.Disposables);
 
-        this.NoTestFileCreate = new ReactivePropertySlim<bool>(defParam.NoTestFileCreate)
+        this.NoTestFileCreate = new BindableReactiveProperty<bool>(defParam.NoTestFileCreate)
             .AddTo(this.Disposables);
 
-        this.HidePinnedPlaces = new ReactivePropertySlim<bool>(defParam.HidePinnedPlaces)
+        this.HidePinnedPlaces = new BindableReactiveProperty<bool>(defParam.HidePinnedPlaces)
             .AddTo(this.Disposables);
 
-        this.NoDereferenceLinks = new ReactivePropertySlim<bool>(defParam.NoDereferenceLinks)
+        this.NoDereferenceLinks = new BindableReactiveProperty<bool>(defParam.NoDereferenceLinks)
             .AddTo(this.Disposables);
 
-        this.OkButtonNeedsInteraction = new ReactivePropertySlim<bool>(defParam.OkButtonNeedsInteraction)
+        this.OkButtonNeedsInteraction = new BindableReactiveProperty<bool>(defParam.OkButtonNeedsInteraction)
             .AddTo(this.Disposables);
 
-        this.DontAddToRecent = new ReactivePropertySlim<bool>(defParam.DontAddToRecent)
+        this.DontAddToRecent = new BindableReactiveProperty<bool>(defParam.DontAddToRecent)
             .AddTo(this.Disposables);
 
-        this.ForceShowHidden = new ReactivePropertySlim<bool>(defParam.ForceShowHidden)
+        this.ForceShowHidden = new BindableReactiveProperty<bool>(defParam.ForceShowHidden)
             .AddTo(this.Disposables);
         #endregion
 
         #region 動作設定：ダイアログカスタマイズ
-        this.Title = new ReactivePropertySlim<string?>(defParam.Title)
+        this.Title = new BindableReactiveProperty<string?>(defParam.Title)
             .AddTo(this.Disposables);
 
-        this.AcceptButtonLabel = new ReactivePropertySlim<string?>(defParam.AcceptButtonLabel)
+        this.AcceptButtonLabel = new BindableReactiveProperty<string?>(defParam.AcceptButtonLabel)
             .AddTo(this.Disposables);
 
-        this.FileNameLabel = new ReactivePropertySlim<string?>(defParam.FileNameLabel)
+        this.FileNameLabel = new BindableReactiveProperty<string?>(defParam.FileNameLabel)
             .AddTo(this.Disposables);
 
-        this.AdditionalPlaces = new ReactivePropertySlim<string?>(string.Join("\n", new[]
+        this.AdditionalPlaces = new BindableReactiveProperty<string?>(string.Join("\n", new[]
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
@@ -516,11 +514,11 @@ public class SaveFileDialogViewModel : AppViewModelBase
 
         #region ダイアログ結果
         this.ResultFilterIndex = Observable.FromEvent<uint?>(h => dlgResultFilter += h, h => dlgResultFilter -= h)
-            .ToReadOnlyReactivePropertySlim()
+            .ToReadOnlyBindableReactiveProperty()
             .AddTo(this.Disposables);
 
-        this.ResultItems = Observable.FromEvent<string>(h => dlgResultItem += h, h => dlgResultItem -= h)
-            .ToReadOnlyReactivePropertySlim()
+        this.ResultItems = Observable.FromEvent<string?>(h => dlgResultItem += h, h => dlgResultItem -= h)
+            .ToReadOnlyBindableReactiveProperty()
             .AddTo(this.Disposables);
         #endregion
     }
@@ -529,7 +527,7 @@ public class SaveFileDialogViewModel : AppViewModelBase
     // 公開プロパティ
     #region インタラクション
     /// <summary>ビューのエラー状態バインド用</summary>
-    public ReactivePropertySlim<bool> HasViewError { get; }
+    public BindableReactiveProperty<bool> HasViewError { get; }
 
     /// <summary>ダイアログ表示要求トリガソース</summary>
     public IObservable<ShellSaveFileDialogActionParameter> ShowDialogRequest { get; }
@@ -540,100 +538,100 @@ public class SaveFileDialogViewModel : AppViewModelBase
 
     #region 動作設定：状態設定
     /// <summary>初期フォルダ</summary>
-    public ReactivePropertySlim<string?> Directory { get; }
+    public BindableReactiveProperty<string?> Directory { get; }
 
     /// <summary>初期入力ファイル名</summary>
-    public ReactivePropertySlim<string?> InitialFileName { get; }
+    public BindableReactiveProperty<string?> InitialFileName { get; }
 
     /// <summary>デフォルト拡張子</summary>
-    public ReactivePropertySlim<string?> DefaultExtension { get; }
+    public BindableReactiveProperty<string?> DefaultExtension { get; }
 
     /// <summary>選択できるファイルフィルタ</summary>
-    public ReactivePropertySlim<string?> Filters { get; }
+    public BindableReactiveProperty<string?> Filters { get; }
 
     /// <summary>ファイルフィルタの初期選択インデックス(1ベース値)</summary>
-    public ReactivePropertySlim<uint> InitialFilterIndex { get; }
+    public BindableReactiveProperty<uint> InitialFilterIndex { get; }
 
     /// <summary>最近使用したフォルダーが無い場合のデフォルトフォルダ</summary>
-    public ReactivePropertySlim<string?> DefaultDirectory { get; }
+    public BindableReactiveProperty<string?> DefaultDirectory { get; }
 
     /// <summary>ダイアログ状態(最終フォルダや位置/サイズ)の永続化のためのGUID</summary>
-    public ReactivePropertySlim<Guid> ClientGuid { get; }
+    public BindableReactiveProperty<Guid> ClientGuid { get; }
     #endregion
 
     #region 動作設定：オプション
     /// <summary>上書きの確認を表示する</summary>
-    public ReactivePropertySlim<bool> OverwritePrompt { get; }
+    public BindableReactiveProperty<bool> OverwritePrompt { get; }
 
     /// <summary>設定されたファイルタイプのファイルのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> StrictFileTypes { get; }
+    public BindableReactiveProperty<bool> StrictFileTypes { get; }
 
     /// <summary>カレントディレクトリを変更しない</summary>
-    public ReactivePropertySlim<bool> NoChangeDirectory { get; }
+    public BindableReactiveProperty<bool> NoChangeDirectory { get; }
 
     /// <summary>ファイルシステムアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> ForceFileSystem { get; }
+    public BindableReactiveProperty<bool> ForceFileSystem { get; }
 
     /// <summary>シェルネームスペース内のすべてのアイテムを選択可能とする</summary>
-    public ReactivePropertySlim<bool> AllNonStorageItems { get; }
+    public BindableReactiveProperty<bool> AllNonStorageItems { get; }
 
     /// <summary>ファイルを開けない状態(共有不可やアクセス拒否等)を検証しない</summary>
-    public ReactivePropertySlim<bool> NoValidate { get; }
+    public BindableReactiveProperty<bool> NoValidate { get; }
 
     /// <summary>存在するフォルダのアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> PathMustExist { get; }
+    public BindableReactiveProperty<bool> PathMustExist { get; }
 
     /// <summary>存在するアイテムのみを選択可能とする</summary>
-    public ReactivePropertySlim<bool> FileMustExist { get; }
+    public BindableReactiveProperty<bool> FileMustExist { get; }
 
     /// <summary>ファイルの作成確認を表示する</summary>
-    public ReactivePropertySlim<bool> CreatePrompt { get; }
+    public BindableReactiveProperty<bool> CreatePrompt { get; }
 
     /// <summary>共有違反(アプリケーションが開いている場合)のガイダンスを表示する</summary>
-    public ReactivePropertySlim<bool> ShareAware { get; }
+    public BindableReactiveProperty<bool> ShareAware { get; }
 
     /// <summary>読み取り専用アイテムを選択不可とする</summary>
-    public ReactivePropertySlim<bool> NoReadOnlyReturn { get; }
+    public BindableReactiveProperty<bool> NoReadOnlyReturn { get; }
 
     /// <summary>ファイルが作成可能であるかをテストしない</summary>
-    public ReactivePropertySlim<bool> NoTestFileCreate { get; }
+    public BindableReactiveProperty<bool> NoTestFileCreate { get; }
 
     /// <summary>ナビゲーションペインのデフォルトアイテムを非表示とする</summary>
-    public ReactivePropertySlim<bool> HidePinnedPlaces { get; }
+    public BindableReactiveProperty<bool> HidePinnedPlaces { get; }
 
     /// <summary>ショートカットの参照先解決をしない。(ショートカットファイル自体を選択可能とする)</summary>
-    public ReactivePropertySlim<bool> NoDereferenceLinks { get; }
+    public BindableReactiveProperty<bool> NoDereferenceLinks { get; }
 
     /// <summary>確定ボタン操作のためにユーザ操作を必要とする</summary>
-    public ReactivePropertySlim<bool> OkButtonNeedsInteraction { get; }
+    public BindableReactiveProperty<bool> OkButtonNeedsInteraction { get; }
 
     /// <summary>選択アイテムを最近使用したファイルのリストに追加しない</summary>
-    public ReactivePropertySlim<bool> DontAddToRecent { get; }
+    public BindableReactiveProperty<bool> DontAddToRecent { get; }
 
     /// <summary>非表示属性のアイテムを表示する</summary>
-    public ReactivePropertySlim<bool> ForceShowHidden { get; }
+    public BindableReactiveProperty<bool> ForceShowHidden { get; }
     #endregion
 
     #region 動作設定：ダイアログカスタマイズ
     /// <summary>ダイアログのタイトル</summary>
-    public ReactivePropertySlim<string?> Title { get; }
+    public BindableReactiveProperty<string?> Title { get; }
 
     /// <summary>確定ボタンのラベル</summary>
-    public ReactivePropertySlim<string?> AcceptButtonLabel { get; }
+    public BindableReactiveProperty<string?> AcceptButtonLabel { get; }
 
     /// <summary>ファイル名入力欄のラベル</summary>
-    public ReactivePropertySlim<string?> FileNameLabel { get; }
+    public BindableReactiveProperty<string?> FileNameLabel { get; }
 
     /// <summary>追加の選択場所</summary>
-    public ReactivePropertySlim<string?> AdditionalPlaces { get; }
+    public BindableReactiveProperty<string?> AdditionalPlaces { get; }
     #endregion
 
     #region ダイアログ結果
     /// <summary>選択時のフィルタインデックス</summary>
-    public ReadOnlyReactivePropertySlim<uint?> ResultFilterIndex { get; }
+    public IReadOnlyBindableReactiveProperty<uint?> ResultFilterIndex { get; }
 
     /// <summary>ダイアログの選択結果</summary>
-    public ReadOnlyReactivePropertySlim<string?> ResultItems { get; }
+    public IReadOnlyBindableReactiveProperty<string?> ResultItems { get; }
     #endregion
 
     /// <summary>ファイル保存ダイアログ表示</summary>
@@ -709,13 +707,13 @@ public class SaveFileDialogViewModel : AppViewModelBase
 internal static class ShellFileDialogHelper
 {
     /// <summary>
-    /// stringのReactivePropertyから空でない場合のみ値を得る
+    /// stringのBindableReactivePropertyから空でない場合のみ値を得る
     /// </summary>
-    /// <param name="self">値を取り出すReactiveProperty</param>
+    /// <param name="self">値を取り出すBindableReactiveProperty</param>
     /// <returns>プロパティ値がnullまたは空ならば null。それ以外はプロパティ値。</returns>
-    public static string? ValueIfNotEmpty(this IReadOnlyReactiveProperty<string?> self)
+    public static string? ValueIfNotEmpty(this ReadOnlyReactiveProperty<string?> self)
     {
-        var value = self.Value;
+        var value = self.CurrentValue;
         return string.IsNullOrEmpty(value) ? null : value;
     }
 

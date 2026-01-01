@@ -1,6 +1,7 @@
 ﻿using System.Windows;
-using Prism.Ioc;
-using TestShellFileDialogCore.Views;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace TestShellFileDialogCore;
 
@@ -9,20 +10,23 @@ namespace TestShellFileDialogCore;
 /// </summary>
 public partial class App
 {
-    /// <summary>
-    /// 型の登録処理
-    /// </summary>
-    /// <param name="containerRegistry">型登録</param>
-    protected override void RegisterTypes(IContainerRegistry containerRegistry)
+    public App()
     {
+        var builder = Host.CreateApplicationBuilder();
+        builder.Services.AddHostedService<AppHost>();
+        builder.Services.AddHostServices();
+
+        this.AppHost = builder.Build();
+
+        Ioc.Default.ConfigureServices(this.AppHost.Services);
     }
 
-    /// <summary>
-    /// アプリケーションシェルの作成
-    /// </summary>
-    /// <returns></returns>
-    protected override Window CreateShell()
+    public IHost AppHost { get; }
+
+    protected override void OnStartup(StartupEventArgs e)
     {
-        return this.Container.Resolve<MainWindow>();
+        base.OnStartup(e);
+
+        _ = this.AppHost.StartAsync();
     }
 }

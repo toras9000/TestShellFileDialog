@@ -1,9 +1,8 @@
-﻿<prism:PrismApplication x:Class="TestShellFileDialogCore.App"
-                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                        xmlns:prism="http://prismlibrary.com/"
-                        xmlns:local="clr-namespace:TestShellFileDialogCore">
+﻿<Application x:Class="TestShellFileDialogCore.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TestShellFileDialogCore">
     <Application.Resources>
 
     </Application.Resources>
-</prism:PrismApplication>
+</Application>

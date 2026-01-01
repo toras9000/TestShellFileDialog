@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using TestShellFileDialogCore.ViewModels;
 
 namespace TestShellFileDialogCore.Views;
 
@@ -7,8 +8,9 @@ namespace TestShellFileDialogCore.Views;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(MainWindowViewModel vm)
     {
         InitializeComponent();
+        this.DataContext = vm;
     }
 }

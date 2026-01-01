@@ -1,12 +1,13 @@
-﻿using System.Reactive.Disposables;
-using Prism.Mvvm;
+﻿
+using CommunityToolkit.Mvvm.ComponentModel;
+using R3;
 
 namespace TestShellFileDialogCore.ViewModels;
 
 /// <summary>
 /// アプリケーションのベースViewModel
 /// </summary>
-public class AppViewModelBase : BindableBase, IDisposable
+public class AppViewModelBase : ObservableObject, IDisposable
 {
     // 構築
     #region コンストラクタ
